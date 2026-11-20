@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Fontes de e-mail</h1>
+{% include "admin/_nav.html" %}
+<p>O portal captura apenas e-mails enviados pelos remetentes <strong>ativos</strong> desta lista.
+A cada 10 minutos ele procura mensagens deles na caixa monitorada.
+Mudanças valem a partir do próximo ciclo; não é preciso reiniciar.</p>
+<p class="vazio">Importante: o e-mail precisa <strong>chegar</strong> na caixa monitorada (luis.miguel@europcar.com.br),
+como destinatário ou em cópia. Para ler outra caixa é necessária a autorização do dono dela.</p>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+<div class="tabela"><table>
+<thead><tr><th>Remetente</th><th>Exige {{ prefixo }} no assunto</th><th>Ativa</th><th>Observação</th><th></th></tr></thead>
+<tbody>
+{% for f in fontes %}
+<tr>
+  <td><strong>{{ f.email }}</strong><br><small>desde {{ f.created_at|dt }}</small></td>
+  <td><label class="check"><input form="fonte-{{ f.id }}" type="checkbox" name="require_prefix" value="1" {% if f.require_prefix %}checked{% endif %}> sim</label></td>
+  <td><label class="check"><input form="fonte-{{ f.id }}" type="checkbox" name="active" value="1" {% if f.active %}checked{% endif %}> sim</label></td>
+  <td><input form="fonte-{{ f.id }}" name="note" value="{{ f.note }}" maxlength="200" aria-label="Observação de {{ f.email }}"></td>
+  <td><form id="fonte-{{ f.id }}" method="post" action="/admin/fontes">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="source_id" value="{{ f.id }}">
+      <button type="submit">Salvar</button></form></td>
+</tr>
+{% else %}<tr><td colspan="5">Nenhuma fonte cadastrada: nada será capturado.</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h2>Adicionar fonte</h2>
+<form method="post" action="/admin/fontes" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>E-mail do remetente <input type="email" name="email" required maxlength="254" placeholder="relatorios@europcar.com.br"></label>
+  <label>Observação <input name="note" maxlength="200" placeholder="ex.: relatórios da frota"></label>
+  <label class="check"><input type="checkbox" name="require_prefix" value="1" checked> Exigir {{ prefixo }} no início do assunto</label>
+  <label class="check"><input type="checkbox" name="active" value="1" checked> Ativa</label>
+  <button type="submit">Adicionar</button>
+</form>
+<p class="vazio">Relatórios de uma fonte nova que não se encaixem em nenhuma regra vão para a <a href="/admin">fila de revisão</a>
+e só aparecem para a equipe depois que você publicar ou criar uma regra.
+Desmarcar "Exigir {{ prefixo }}" faz o portal capturar <strong>todos</strong> os e-mails desse remetente.</p>
+{% endblock %}

@@ -1,0 +1,36 @@
+# Implantação: app + Caddy (HTTPS automático Let's Encrypt).
+# Uso:  cd deploy && cp ../.env.example .env && (editar) && docker compose up -d --build
+services:
+  app:
+    build: ..
+    image: cio-portal:${CIO_VERSION:-0.9.1}   # = cio/__init__.py __version__
+    env_file: .env
+    environment:
+      BACKUP_DIR: /backups
+    volumes:
+      - cio-data:/data
+      - cio-backups:/backups
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=256m"]   # limite: envios de até 25 MB passam por aqui
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    expose: ["8000"]
+
+  caddy:
+    image: caddy:2.8.4
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      CIO_DOMAIN: ${CIO_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [app]
+
+volumes:
+  cio-data:
+  cio-backups:
+  caddy-data:
+  caddy-config:

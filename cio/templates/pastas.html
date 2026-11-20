@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Pastas</h1>
+<p class="vazio">Pesquisas prontas criadas pela administração. Cada pasta mostra só o que o seu perfil pode ver.</p>
+<div class="cards">
+{% for f in pastas %}<a class="card" href="/pastas/{{ f.id }}"><strong>{{ f.total }}</strong><span>{{ f.name }}</span></a>
+{% else %}<p class="vazio">Nenhuma pasta disponível ainda.</p>{% endfor %}
+</div>
+{% endblock %}

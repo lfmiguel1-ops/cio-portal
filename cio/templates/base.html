@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Central de Inteligência Operacional{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+{% if user %}
+<header class="topo">
+  <div class="marca"><a href="/">Central de Inteligência</a></div>
+  <nav aria-label="Principal">
+    <a href="/">Início</a>
+    <a href="/hoje">Hoje</a>
+    <a href="/areas">Áreas</a>
+    <a href="/busca">Busca</a>
+    <a href="/historico">Histórico</a>
+    <a href="/pastas">Pastas</a>
+    {% if pode_enviar %}<a href="/enviar">Enviar arquivo</a>{% endif %}
+    {% if user.is_admin %}<a href="/admin">Administração</a>{% endif %}
+  </nav>
+  <form method="post" action="/logout" class="sair">
+    <input type="hidden" name="csrf_token" value="{{ csrf }}">
+    <span class="quem" data-inicial="{{ (user.name or user.email)[:1] }}"><span>{{ user.email }}</span></span>
+    <button type="submit">Sair</button>
+  </form>
+</header>
+{% endif %}
+<main id="conteudo">
+{% if user and sync %}
+  {% if user.is_admin and sync.falhando %}<p class="alerta-sync" role="alert">Atenção: as últimas sincronizações com o Zoho falharam. Veja os erros em <a href="/admin">Administração</a>.</p>{% endif %}
+  <p class="sync">{% if sync.ultima_ok %}Atualizado em {{ sync.ultima_ok|dt }}{% else %}Aguardando a primeira sincronização{% endif %}</p>
+{% endif %}
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

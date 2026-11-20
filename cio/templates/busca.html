@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ titulo }}</h1>
+{% if not so_lista %}
+<form method="get" class="filtros" role="search">
+  {% if titulo == 'Busca' %}
+  <label class="largo">Pesquisar <input type="search" name="q" value="{{ p.q }}" placeholder='palavras ou "frase exata"' autofocus></label>
+  {% endif %}
+  <label>Área
+    <select name="area"><option value="">Todas</option>
+    {% for a in areas %}<option value="{{ a.slug }}" {% if a.slug == p.area %}selected{% endif %}>{{ a.name }}</option>{% endfor %}
+    </select></label>
+  <label>Prioridade
+    <select name="prioridade"><option value="">Todas</option>
+    {% for v in ['alta','normal','baixa'] %}<option value="{{ v }}" {% if v == p.prioridade %}selected{% endif %}>{{ v|capitalize }}</option>{% endfor %}
+    </select></label>
+  <label>De <input type="date" name="de" value="{{ p.de }}"></label>
+  <label>Até <input type="date" name="ate" value="{{ p.ate }}"></label>
+  <label>Ordenar
+    <select name="ordem">
+      {% if titulo == 'Busca' %}<option value="relevancia" {% if p.ordem == 'relevancia' %}selected{% endif %}>Relevância</option>{% endif %}
+      <option value="data" {% if p.ordem == 'data' %}selected{% endif %}>Mais recentes</option>
+      <option value="data_asc" {% if p.ordem == 'data_asc' %}selected{% endif %}>Mais antigos</option>
+    </select></label>
+  {% if user.is_admin %}
+  <label>Status
+    <select name="status"><option value="">Todos</option>
+    {% for v in ['publicado','quarentena','despublicado'] %}<option value="{{ v }}" {% if v == p.status %}selected{% endif %}>{{ v }}</option>{% endfor %}
+    </select></label>
+  {% endif %}
+  <button type="submit">Filtrar</button>
+</form>
+{% endif %}
+<p class="total">{{ total }} resultado{{ '' if total == 1 else 's' }}</p>
+{% include "_lista_itens.html" %}
+{% set paginas = ((total + 19) // 20) %}
+{% if paginas > 1 %}
+<nav class="paginacao" aria-label="Paginação">
+  {% if p.pagina > 1 %}<a href="?q={{ p.q|urlencode }}&area={{ p.area }}&prioridade={{ p.prioridade }}&de={{ p.de }}&ate={{ p.ate }}&ordem={{ p.ordem }}&status={{ p.status }}&pagina={{ p.pagina - 1 }}">← Anterior</a>{% endif %}
+  <span>Página {{ p.pagina }} de {{ paginas }}</span>
+  {% if p.pagina < paginas %}<a href="?q={{ p.q|urlencode }}&area={{ p.area }}&prioridade={{ p.prioridade }}&de={{ p.de }}&ate={{ p.ate }}&ordem={{ p.ordem }}&status={{ p.status }}&pagina={{ p.pagina + 1 }}">Próxima →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

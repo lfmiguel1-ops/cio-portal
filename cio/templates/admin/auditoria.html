@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Auditoria</h1>
+{% include "admin/_nav.html" %}
+<div class="tabela"><table><thead><tr><th>Quando</th><th>Usuário</th><th>Ação</th><th>Alvo</th><th>Detalhes</th></tr></thead><tbody>
+{% for l in rows %}<tr><td>{{ l.at|dt }}</td><td>{{ l.email or 'sistema' }}</td><td>{{ l.action }}</td><td>{{ l.target }}</td><td><small>{{ l.details }}</small></td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

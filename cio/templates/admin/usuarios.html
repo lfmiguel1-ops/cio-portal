@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Usuários autorizados</h1>
+{% include "admin/_nav.html" %}
+<p>Somente e-mails desta lista conseguem entrar. Ter e-mail @europcar.com.br não basta.
+Para alterar alguém, preencha o mesmo e-mail com os novos dados. O grupo define o que a pessoa vê e
+também o público de relatórios enviados a ela por e-mail.</p>
+<div class="tabela"><table><thead><tr><th>E-mail</th><th>Nome</th><th>Grupo</th><th>Administrador</th><th>Ativo</th><th>Último login</th><th></th></tr></thead><tbody>
+{% for u in users %}<tr><td>{{ u.email }}</td><td>{{ u.name }}</td><td>{{ u.group_name or '— (só vê "Todos")' }}</td><td>{{ 'sim' if u.role == 'admin' else '' }}</td><td>{{ 'sim' if u.active else 'não' }}</td><td>{{ u.last_login_at|dt if u.last_login_at else '—' }}</td><td><a href="/admin/usuarios?editar={{ u.email|urlencode }}#form-usuario">Editar</a></td></tr>{% endfor %}
+</tbody></table></div>
+<h2 id="form-usuario">{{ 'Alterar ' ~ atual.email if atual else 'Adicionar usuário' }}</h2>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+<form method="post" action="/admin/usuarios" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  {% if atual %}<input type="hidden" name="email" value="{{ atual.email }}">
+  <p class="largo"><strong>{{ atual.email }}</strong> · <a href="/admin/usuarios">cancelar</a></p>
+  {% else %}<label>E-mail <input type="email" name="email" required></label>{% endif %}
+  <label>Nome <input name="name" value="{{ atual.name if atual else '' }}"></label>
+  <label>Grupo <select name="group_id"><option value="">— nenhum (só vê "Todos")</option>{% for g in all_groups %}<option value="{{ g.id }}" {% if atual and atual.group_id == g.id %}selected{% endif %}>{{ g.caminho }}</option>{% endfor %}</select></label>
+  <label class="check"><input type="checkbox" name="admin" value="1" {% if atual and atual.role == 'admin' %}checked{% endif %}> Administrador (vê tudo e configura o portal)</label>
+  <label class="check"><input type="checkbox" name="active" value="1" {% if not atual or atual.active %}checked{% endif %}> Ativo</label>
+  <button type="submit">Salvar</button>
+</form>
+{% endblock %}

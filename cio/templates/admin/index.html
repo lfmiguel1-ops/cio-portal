@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Administração</h1>
+{% include "admin/_nav.html" %}
+{% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}
+<div class="cards">
+  {% for k, v in stats.items() %}<div class="card"><strong>{{ v }}</strong><span>{{ k }}</span></div>{% endfor %}
+</div>
+<div class="acoes">
+  <form method="post" action="/admin/ingerir"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button>Sincronizar agora</button></form>
+  <form method="post" action="/admin/reclassificar"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button>Reaplicar regras à quarentena</button></form>
+  <form method="post" action="/admin/backup"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button>Backup + teste de restauração</button></form>
+</div>
+
+<p class="vazio">Backup: {% if ultimo_backup %}último conjunto {{ ultimo_backup.conjunto }} ({{ ultimo_backup.arquivos }} arquivos, {{ (ultimo_backup.bytes / 1048576)|round(1) }} MB; {{ ultimo_backup.total }} conjuntos guardados){% else %}<strong class="erro">nenhum backup encontrado</strong>{% endif %}
+· Último teste de restauração: {% if ultimo_teste %}{{ ultimo_teste.at|dt }} — {{ ultimo_teste.details }}{% else %}<strong class="erro">nunca executado</strong>{% endif %}
+· Versão {{ versao }}</p>
+
+<h2>Fila de revisão (quarentena)</h2>
+{% if fila %}
+<div class="tabela"><table>
+<thead><tr><th>Recebido</th><th>Assunto</th><th>Motivo</th><th>Publicar para</th><th></th></tr></thead>
+<tbody>
+{% for r in fila %}
+<tr>
+  <td>{{ r.received_at|dt }}</td>
+  <td><a href="/r/{{ r.id }}">{{ r.subject }}</a><br><small>{{ r.sender }}</small></td>
+  <td><small>{{ r.status_reason }}</small>
+    {% if not r.sender_verified %}<br><strong class="erro">Remetente não autenticado — confira antes de publicar.</strong>{% endif %}
+    {% if r.reconhecidos %}<br><small>Destinatários cadastrados: {{ r.reconhecidos|join(', ') }}</small>{% endif %}
+    {% if r.ignorados %}<br><small>Não cadastrados (ignorados): {{ r.ignorados|join(', ') }}</small>{% endif %}</td>
+  <td>
+    <form method="post" action="/admin/r/{{ r.id }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <select name="area_id" aria-label="Área">
+        <option value="">Área…</option>
+        {% for a in all_areas %}<option value="{{ a.id }}" {% if a.id == r.area_id %}selected{% endif %}>{{ a.name }}</option>{% endfor %}
+      </select>
+      <span class="grupos">{% for g in all_groups %}<label class="check"><input type="checkbox" name="grupos" value="{{ g.id }}" {% if g.id in r.grupos_sugeridos %}checked{% endif %}> {{ g.caminho }}</label>{% endfor %}</span>
+      {% if not r.sender_verified %}<label class="check"><input type="checkbox" name="confirmar_remetente" value="1" required> Confirmo que o remetente é legítimo</label>{% endif %}
+      <button name="acao" value="publicar">Publicar</button>
+    </form>
+  </td>
+  <td><form method="post" action="/admin/r/{{ r.id }}"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button name="acao" value="despublicar" class="sec">Descartar</button></form></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}<p class="vazio">Fila vazia.</p>{% endif %}
+
+<h2>Erros de ingestão não resolvidos</h2>
+{% if erros %}
+<div class="tabela"><table><thead><tr><th>Quando</th><th>Etapa</th><th>Mensagem</th><th>Tentativas</th><th>Erro</th><th></th></tr></thead><tbody>
+{% for e in erros %}<tr><td>{{ e.created_at|dt }}</td><td>{{ e.stage }}</td><td>{{ e.message_id }}</td>
+<td>{{ e.attempts }}{% if e.stage == 'processamento' and e.attempts >= max_tentativas %}<br><strong>isolada</strong>{% endif %}</td>
+<td><small>{{ e.error }}</small></td>
+<td>{% if e.stage == 'processamento' and e.message_id %}<form method="post" action="/admin/erros/{{ e.id }}/tentar"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button class="sec">Tentar de novo</button></form>{% elif e.stage == 'anexos' %}<small>novas tentativas automáticas</small>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="vazio">Nenhum erro pendente.</p>{% endif %}
+
+<h2>Últimas execuções</h2>
+<div class="tabela"><table><thead><tr><th>Início</th><th>Modo</th><th>Lidas</th><th>Novas</th><th>Versões</th><th>Duplicadas</th><th>Ignoradas</th><th>Erros</th></tr></thead><tbody>
+{% for r in runs %}<tr class="{% if not r.ok %}falha{% endif %}"><td>{{ r.started_at|dt }}</td><td>{{ r.mode }}</td><td>{{ r.fetched }}</td><td>{{ r.new }}</td><td>{{ r.versions }}</td><td>{{ r.duplicates }}</td><td>{{ r.skipped }}</td><td>{{ r.errors }}</td></tr>
+{% else %}<tr><td colspan="8">Nenhuma execução.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

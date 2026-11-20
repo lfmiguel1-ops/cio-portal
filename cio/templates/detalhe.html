@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ r.subject }}{% endblock %}
+{% block content %}
+<p><a href="/busca" class="voltar">← Voltar à busca</a></p>
+<h1 class="assunto">{{ r.subject }}</h1>
+<dl class="ficha">
+  <div><dt>Recebido</dt><dd>{{ r.received_at|dt }}</dd></div>
+  <div><dt>{{ 'Enviado por' if r.source == 'manual' else 'Remetente' }}</dt><dd>{{ r.sender }}</dd></div>
+  <div><dt>Área</dt><dd>{{ r.area_name or '—' }}</dd></div>
+  <div><dt>Prioridade</dt><dd>{{ r.priority }}</dd></div>
+  {% if user.is_admin %}
+  <div><dt>Status</dt><dd>{{ r.status }} — {{ r.status_reason }}</dd></div>
+  <div><dt>Quem vê</dt><dd>{{ grupos|join(', ') or '— (ninguém além de administradores)' }}</dd></div>
+  {% if r.recipients %}<div><dt>Destinatários do e-mail</dt><dd>{{ r.recipients.replace(',', ', ') }}</dd></div>{% endif %}
+  <div><dt>Versão</dt><dd>{{ r.version }}</dd></div>
+  {% endif %}
+</dl>
+<div class="acoes">
+  {% if r.download_allowed and r.original_path %}<a class="botao sec" href="/r/{{ r.id }}/download">Baixar original</a>{% endif %}
+</div>
+{% if r.source == 'manual' %}
+  {% if r.description %}<div class="descricao">{{ r.description }}</div>{% endif %}
+  {% if r.file_mime == 'application/pdf' %}
+  <p><a class="botao sec" href="/r/{{ r.id }}/arquivo" target="_blank" rel="noopener">Abrir PDF em nova aba</a></p>
+  <iframe class="email" src="/r/{{ r.id }}/arquivo" title="PDF do relatório" loading="lazy"></iframe>
+  {% else %}
+  <img class="enviado" src="/r/{{ r.id }}/arquivo" alt="{{ r.subject }}">
+  {% endif %}
+{% else %}
+<iframe class="email" src="/r/{{ r.id }}/conteudo" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Conteúdo do relatório" loading="lazy"></iframe>
+{% endif %}
+{% if anexos %}
+<h2>Anexos</h2>
+<ul>{% for a in anexos %}<li>{% if r.download_allowed %}<a href="/r/{{ r.id }}/anexo/{{ a.id }}">{{ a.filename }}</a>{% else %}{{ a.filename }}{% endif %}
+  ({{ (a.size / 1024)|round(1) }} KB){% if not a.supported %} — <em>formato sem texto pesquisável</em>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if user.is_admin %}
+<section class="painel-admin" aria-labelledby="t-admin">
+  <h2 id="t-admin">Administração deste relatório</h2>
+  <p>Status: <strong>{{ r.status }}</strong>{% if not r.sender_verified %} · <strong class="erro">remetente não autenticado</strong>{% endif %}</p>
+  <form method="post" action="/admin/r/{{ r.id }}" class="regra">
+    <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="voltar" value="detalhe">
+    <label>Área (assunto) <select name="area_id"><option value="">—</option>{% for a in all_areas %}<option value="{{ a.id }}" {% if a.id == r.area_id %}selected{% endif %}>{{ a.name }}</option>{% endfor %}</select></label>
+    <fieldset class="largo"><legend>Quem vê</legend>
+      {% for g in all_groups %}<label class="check"><input type="checkbox" name="grupos" value="{{ g.id }}" {% if g.id in grupos_atuais %}checked{% endif %}> {{ g.caminho }}</label>{% endfor %}
+    </fieldset>
+    {% if not r.sender_verified %}<label class="check largo"><input type="checkbox" name="confirmar_remetente" value="1"> Confirmo que o remetente é legítimo</label>{% endif %}
+    <button name="acao" value="publicar">{{ 'Salvar e manter publicado' if r.status == 'publicado' else 'Publicar' }}</button>
+  </form>
+  {% if r.status == 'publicado' %}
+  <form method="post" action="/admin/r/{{ r.id }}"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="voltar" value="detalhe">
+    <button name="acao" value="despublicar" class="sec">Despublicar (ninguém além de administradores verá)</button></form>
+  {% endif %}
+</section>
+{% endif %}
+{% if user.is_admin and versoes|length > 1 %}
+<h2>Versões</h2><ul>{% for v in versoes %}<li>v{{ v.version }} — {{ v.created_at|dt }}</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

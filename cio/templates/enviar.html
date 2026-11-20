@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Enviar arquivo</h1>
+<p>Publique um relatório a partir de um arquivo <strong>PDF, JPG ou PNG</strong> (até {{ limite_mb }} MB).
+O texto de PDFs entra na busca; imagens são encontradas pelo título e pela descrição.</p>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+{% if not destinos or not grupos %}<p class="vazio">Não há áreas ou grupos disponíveis para envio. Fale com o administrador.</p>{% else %}
+<form method="post" action="/enviar" enctype="multipart/form-data" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label class="largo">Título <input id="titulo" name="titulo" required maxlength="300" placeholder="ex.: Fechamento mensal da frota — outubro/2026"></label>
+  <label>Data de referência <input id="data" type="date" name="data" value="{{ hoje }}" required></label>
+  <label>Área
+    <select id="area_id" name="area_id" required><option value="">Assunto…</option>
+    {% for a in destinos %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}</select></label>
+  <label>Prioridade
+    <select id="priority" name="priority"><option>normal</option><option>alta</option><option>baixa</option></select></label>
+  <fieldset class="largo"><legend>Quem vê</legend>
+    {% for g in grupos %}<label class="check"><input type="checkbox" name="grupos" value="{{ g.id }}"> {{ g.caminho }}</label>{% endfor %}
+  </fieldset>
+  <label class="largo">Descrição e palavras-chave <textarea id="descricao" name="descricao" rows="4" maxlength="5000" placeholder="Resumo do conteúdo. Para imagens, é o que permite encontrá-las na busca."></textarea></label>
+  <label class="largo">Arquivo <input id="arquivo" type="file" name="arquivo" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required></label>
+  <button type="submit">Publicar</button>
+</form>
+{% endif %}
+{% endblock %}

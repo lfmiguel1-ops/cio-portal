@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Áreas</h1>
+<div class="cards">
+{% for a in areas %}<a class="card" href="/areas/{{ a.slug }}"><strong>{{ a.total }}</strong><span>{{ a.name }}</span></a>
+{% else %}<p class="vazio">Você ainda não tem áreas liberadas.</p>{% endfor %}
+</div>
+{% endblock %}

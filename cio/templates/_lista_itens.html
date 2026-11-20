@@ -1,0 +1,19 @@
+{% if rows %}
+<ul class="itens">
+{% for r in rows %}
+  <li class="item {% if r.priority == 'alta' %}alta{% endif %}">
+    <a href="/r/{{ r.id }}" class="titulo">{{ r.subject }}</a>
+    <div class="meta">
+      <span>{{ r.received_at|dt }}</span>
+      {% if r.area_name %}<span class="tag">{{ r.area_name }}</span>{% endif %}
+      {% if r.source == 'manual' %}<span class="tag arquivo">{{ 'PDF' if r.file_mime == 'application/pdf' else 'Imagem' }}</span>{% endif %}
+      {% if r.priority == 'alta' %}<span class="tag alerta">Prioridade alta</span>{% endif %}
+      {% if user.is_admin and r.status != 'publicado' %}<span class="tag status">{{ r.status }}</span>{% endif %}
+    </div>
+    {% if r.trecho %}<p class="trecho">{{ r.trecho|snippet }}</p>{% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="vazio">Nenhum relatório encontrado.</p>
+{% endif %}

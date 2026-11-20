@@ -1,0 +1,51 @@
+# Coolify › New Resource › Docker Compose Empty  (colar este arquivo)
+# A imagem é construída no próprio servidor (sem repositório Git):
+#   unzip cio-portal-v0.9.1.zip && cd cio-portal && docker build --build-arg CIO_VERSION=0.9.1 -t cio-portal:0.9.1 .
+# VERSÃO: a tag abaixo deve ser igual à de cio/__init__.py (__version__). Para voltar de versão, troque a tag
+# pela anterior (a imagem anterior continua no servidor) e faça Redeploy — ver deploy/COOLIFY.md › Rollback.
+# Domínio (Coolify › serviço cio-portal › Domains): https://relatorios.europcar.com.br:8000
+#   (o ":8000" indica ao Coolify a porta interna; o acesso público continua em https:// na 443)
+# Variáveis: Coolify › Environment Variables (ver deploy/COOLIFY.md). Nada de senha neste arquivo.
+services:
+  cio-portal:
+    image: cio-portal:0.9.1
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      CIO_ENV: production
+      CIO_DATA_DIR: /data
+      DATABASE_URL: ${DATABASE_URL}
+      CIO_BASE_URL: ${CIO_BASE_URL}
+      CIO_SECRET_KEY: ${CIO_SECRET_KEY}
+      CIO_ALLOWED_DOMAIN: europcar.com.br
+      ZOHO_INGEST_CLIENT_ID: ${ZOHO_INGEST_CLIENT_ID}
+      ZOHO_INGEST_CLIENT_SECRET: ${ZOHO_INGEST_CLIENT_SECRET}
+      ZOHO_INGEST_REFRESH_TOKEN: ${ZOHO_INGEST_REFRESH_TOKEN}
+      ZOHO_MAIL_ACCOUNT_IDS: "3063450000000008002"
+      ZOHO_WORKDRIVE_ROOT_FOLDER_ID: wm4c6d2b17b41899e4746afe91dc51f8c301c
+      ZOHO_LOGIN_CLIENT_ID: ${ZOHO_LOGIN_CLIENT_ID}
+      ZOHO_LOGIN_CLIENT_SECRET: ${ZOHO_LOGIN_CLIENT_SECRET}
+      INGEST_ENABLED: ${INGEST_ENABLED:-false}
+      INGEST_INTERVAL_MIN: "10"
+      BACKUP_DIR: /backups
+      BACKUP_KEEP_DAILY: "30"
+      BACKUP_KEEP_MONTHLY: "12"
+      RESTORE_TEST_DATABASE_URL: ${RESTORE_TEST_DATABASE_URL:-}   # opcional: banco vazio só para teste
+      BACKUP_TO_WORKDRIVE: ${BACKUP_TO_WORKDRIVE:-false}
+    volumes:
+      - cio-data:/data          # originais (e-mails, anexos, envios manuais) — somente-leitura dentro do volume
+      - cio-backups:/backups    # backups (banco + arquivos) em VOLUME SEPARADO; a TI copia para fora do servidor
+    read_only: true
+    tmpfs: ["/tmp:size=256m"]   # limite: envios de até 25 MB passam por aqui
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/saude')"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  cio-data:
+  cio-backups:

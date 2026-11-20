@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Pastas de pesquisa</h1>
+{% include "admin/_nav.html" %}
+<p>Cada pasta é uma pesquisa salva que aparece para todos no menu <a href="/pastas">Pastas</a>.
+O conteúdo se atualiza sozinho conforme chegam relatórios novos, e cada pessoa vê apenas o que o perfil dela permite.</p>
+{% for f in lista + [None] %}
+<form method="post" action="/admin/pastas" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="folder_id" value="{{ f.id if f else 0 }}">
+  <h2>{{ f.name if f else 'Nova pasta' }}{% if f and not f.active %} <small>(desativada)</small>{% endif %}</h2>
+  <label>Nome <input name="name" value="{{ f.name if f else '' }}" required maxlength="80" placeholder="ex.: Reclamações de caução"></label>
+  <label>Termos de busca <input name="q" value="{{ f.q if f else '' }}" maxlength="200" placeholder='ex.: caução estorno  ou  "stop sell"'></label>
+  <label>Combinar termos <select name="match_any"><option value="">Todas as palavras</option><option value="1" {% if f and f.match_any %}selected{% endif %}>Qualquer uma das palavras</option></select></label>
+  <label>Área <select name="area_slug"><option value="">Todas</option>{% for a in all_areas %}<option value="{{ a.slug }}" {% if f and f.area_slug == a.slug %}selected{% endif %}>{{ a.name }}</option>{% endfor %}</select></label>
+  <label>Prioridade <select name="priority"><option value="">Todas</option>{% for v in ['alta','normal','baixa'] %}<option {% if f and f.priority == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+  <label>Ordem no menu <input type="number" name="position" value="{{ f.position if f else 100 }}"></label>
+  <label class="check"><input type="checkbox" name="active" value="1" {% if not f or f.active %}checked{% endif %}> Ativa</label>
+  <button type="submit">Salvar</button>
+</form>
+{% endfor %}
+{% endblock %}

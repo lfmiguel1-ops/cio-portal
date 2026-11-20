@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Áreas</h1>
+{% include "admin/_nav.html" %}
+<p>Áreas são o <strong>assunto</strong> dos relatórios (para organizar e filtrar). Quem vê é definido em
+<a href="/admin/grupos">Grupos de acesso</a>. Desativar uma área esconde os relatórios dela
+de todos, exceto administradores; nada é apagado e é possível reativar a qualquer momento.</p>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+<div class="tabela"><table>
+<thead><tr><th>Nome</th><th>Relatórios</th><th>Ativa</th><th></th></tr></thead><tbody>
+{% for a in lista %}
+<tr>
+  <td><input form="area-{{ a.id }}" name="name" value="{{ a.name }}" maxlength="60" aria-label="Nome da área {{ a.name }}"></td>
+  <td>{{ a.total }}</td>
+  <td><label class="check"><input form="area-{{ a.id }}" type="checkbox" name="active" value="1" {% if a.active %}checked{% endif %}> sim</label></td>
+  <td><form id="area-{{ a.id }}" method="post" action="/admin/areas"><input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <input type="hidden" name="area_id" value="{{ a.id }}"><button type="submit">Salvar</button></form></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<h2>Nova área</h2>
+<form method="post" action="/admin/areas" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Nome <input name="name" required maxlength="60" placeholder="ex.: Frota"></label>
+  <label class="check"><input type="checkbox" name="active" value="1" checked> Ativa</label>
+  <button type="submit">Criar área</button>
+</form>
+<p class="vazio">Para publicação automática, crie uma <a href="/admin/regras">regra</a> apontando para a área nova.</p>
+{% endblock %}

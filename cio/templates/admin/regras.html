@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Regras de classificação</h1>
+{% include "admin/_nav.html" %}
+<p>Avaliadas em ordem de posição; a primeira que casar define área (assunto), prioridade e público. Sem regra correspondente → <strong>quarentena</strong>.
+Com "Pelos destinatários", o público é o grupo de quem está em Para/CC; o "Público padrão" vale quando nenhum destinatário está cadastrado.
+Use "Fixo" para relatórios sensíveis que nunca devem seguir os destinatários.</p>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+{% for r in rules + [None] %}
+<form method="post" action="/admin/regras" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="rule_id" value="{{ r.id if r else 0 }}">
+  <h2>{{ r.name if r else 'Nova regra' }}</h2>
+  <label>Nome <input name="name" value="{{ r.name if r else '' }}" required></label>
+  <label>Posição <input type="number" name="position" value="{{ r.position if r else 100 }}"></label>
+  <label>Remetente (regex) <input name="sender_pattern" value="{{ r.sender_pattern if r else '' }}"></label>
+  <label>Assunto (regex) <input name="subject_regex" value="{{ r.subject_regex if r else '' }}"></label>
+  <label>Área <select name="area_id"><option value="0">—</option>{% for a in all_areas %}<option value="{{ a.id }}" {% if r and a.id == r.area_id %}selected{% endif %}>{{ a.name }}</option>{% endfor %}</select></label>
+  <label>Prioridade <select name="priority">{% for v in ['baixa','normal','alta'] %}<option {% if r and v == r.priority or (not r and v == 'normal') %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+  <label>Público padrão <select name="group_id"><option value="0">— (só pelos destinatários)</option>{% for g in all_groups %}<option value="{{ g.id }}" {% if r and r.group_id == g.id %}selected{% endif %}>{{ g.caminho }}</option>{% endfor %}</select></label>
+  <label>Como definir o público <select name="audience_mode"><option value="destinatarios" {% if not r or r.audience_mode != 'fixo' %}selected{% endif %}>Pelos destinatários do e-mail</option><option value="fixo" {% if r and r.audience_mode == 'fixo' %}selected{% endif %}>Fixo (ignorar destinatários)</option></select></label>
+  <label>Ação <select name="action">{% for v in ['quarentena','publicar'] %}<option {% if r and v == r.action %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+  <label class="check"><input type="checkbox" name="active" value="1" {% if not r or r.active %}checked{% endif %}> Ativa</label>
+  <button type="submit">Salvar</button>
+</form>
+{% endfor %}
+{% endblock %}

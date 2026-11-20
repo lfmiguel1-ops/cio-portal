@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Início</h1>
+<div class="cards">
+  <a class="card" href="/hoje"><strong>{{ hoje }}</strong><span>relatórios hoje</span></a>
+  {% for a in areas %}<a class="card" href="/areas/{{ a.slug }}"><strong>{{ a.total }}</strong><span>{{ a.name }}</span></a>{% endfor %}
+</div>
+{% if alertas %}
+<section aria-labelledby="t-alertas">
+  <h2 id="t-alertas">Alertas de hoje (prioridade alta)</h2>
+  {% with rows=alertas %}{% include "_lista_itens.html" %}{% endwith %}
+</section>
+{% endif %}
+<section aria-labelledby="t-ultimos">
+  <h2 id="t-ultimos">Últimas publicações</h2>
+  {% with rows=ultimos %}{% include "_lista_itens.html" %}{% endwith %}
+</section>
+{% endblock %}

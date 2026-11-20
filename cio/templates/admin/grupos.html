@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Grupos de acesso</h1>
+{% include "admin/_nav.html" %}
+<p>Os grupos definem <strong>quem vê</strong> cada relatório (a área é só o assunto). Cada pessoa pertence a um grupo
+e vê os relatórios do próprio grupo, dos grupos marcados em "Também vê" e os marcados para <strong>Todos</strong>.
+Administradores veem tudo.</p>
+<p class="vazio">E-mails: o portal lê quem está em Para/CC (exceto a caixa monitorada e o remetente) e publica para os
+grupos dessas pessoas. Se o e-mail foi para pessoas de todos os grupos, o público vira "Todos".</p>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+{% for g in lista %}{% if g.kind != 'todos' %}
+<form method="post" action="/admin/grupos" class="regra{% if g.nivel %} subgrupo nivel-{{ [g.nivel, 3]|min }}{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="group_id" value="{{ g.id }}">
+  <h2>{% if g.nivel %}<span class="vazio">{{ g.caminho.rsplit(' › ', 1)[0] }} › </span>{% endif %}{{ g.name }} <small class="vazio">· {{ g.pessoas }} pessoa{{ '' if g.pessoas == 1 else 's' }} · {{ g.relatorios }} relatório{{ '' if g.relatorios == 1 else 's' }}{% if not g.active %} · desativado{% endif %}</small></h2>
+  <label>Nome <input name="name" value="{{ g.name }}" required maxlength="60"></label>
+  <label>Tipo <select name="kind"><option value="interno" {% if g.kind == 'interno' %}selected{% endif %}>Interno (funcionários)</option><option value="franqueado" {% if g.kind == 'franqueado' %}selected{% endif %}>Franqueado</option></select></label>
+  <label>Grupo pai <select name="parent_id"><option value="">— nenhum (grupo principal)</option>{% for o in lista %}{% if o.kind != 'todos' and o.id != g.id %}<option value="{{ o.id }}" {% if g.parent_id == o.id %}selected{% endif %}>{{ o.caminho }}</option>{% endif %}{% endfor %}</select></label>
+  <label>Ordem <input type="number" name="position" value="{{ g.position }}"></label>
+  <label class="check"><input type="checkbox" name="can_upload" value="1" {% if g.can_upload %}checked{% endif %}> Pode enviar arquivos</label>
+  <label class="check"><input type="checkbox" name="active" value="1" {% if g.active %}checked{% endif %}> Ativo</label>
+  <fieldset><legend>Também vê os relatórios de</legend>
+    {% for o in lista %}{% if o.kind != 'todos' and o.id != g.id %}
+    <label class="check"><input type="checkbox" name="ve" value="{{ o.id }}" {% if o.id in sees.get(g.id, ()) %}checked{% endif %}> {{ o.caminho }}</label>
+    {% endif %}{% endfor %}
+  </fieldset>
+  <button type="submit">Salvar</button>
+</form>
+{% endif %}{% endfor %}
+<h2>Novo grupo</h2>
+<form method="post" action="/admin/grupos" class="regra">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Nome <input name="name" required maxlength="60" placeholder="ex.: Franqueado Campinas"></label>
+  <label>Grupo pai <select name="parent_id"><option value="">— nenhum (grupo principal)</option>{% for o in lista %}{% if o.kind != 'todos' %}<option value="{{ o.id }}" {% if o.slug == 'franqueados' %}selected{% endif %}>{{ o.caminho }}</option>{% endif %}{% endfor %}</select></label>
+  <label>Tipo <select name="kind"><option value="franqueado">Franqueado</option><option value="interno">Interno (funcionários)</option></select></label>
+  <label>Ordem <input type="number" name="position" value="100"></label>
+  <label class="check"><input type="checkbox" name="can_upload" value="1"> Pode enviar arquivos</label>
+  <label class="check"><input type="checkbox" name="active" value="1" checked> Ativo</label>
+  <fieldset><legend>Também vê os relatórios de</legend>
+    {% for o in lista %}{% if o.kind != 'todos' %}<label class="check"><input type="checkbox" name="ve" value="{{ o.id }}"> {{ o.caminho }}</label>{% endif %}{% endfor %}
+  </fieldset>
+  <button type="submit">Criar grupo</button>
+</form>
+<p class="vazio">Subgrupos: quem está em um subgrupo (ex.: Franqueados › Franqueado Campinas) vê também o que é enviado
+ao grupo pai (Franqueados), mas nunca o de outras cidades. Quem vê o grupo pai — como a Diretoria — vê todos os subgrupos.
+Se um e-mail vai para pessoas de todas as cidades, o público vira "Franqueados".</p>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="login">
+  <h1>Central de Inteligência Operacional</h1>
+  <p>Acesse com sua conta corporativa Zoho (@europcar.com.br).</p>
+  {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+  <a class="botao" href="/auth/start">Entrar com Zoho</a>
+  {% if dev %}
+  <form method="post" action="/auth/dev-login" class="dev">
+    <p><strong>Ambiente de teste</strong> — login simulado (inexistente em produção)</p>
+    <label>E-mail <input name="email" type="email" required></label>
+    <button type="submit">Entrar (teste)</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
