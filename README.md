@@ -103,7 +103,7 @@ Ver **`deploy/COOLIFY.md`** (procedimento oficial) e `deploy/postgres_setup.sql`
    Revise o resultado, depois importe e ative `INGEST_ENABLED=true`.
 
 ### Rollback
-- Versão atual: **0.9.1** (`cio/__init__.py`). Construa sempre com a tag da versão. Para voltar à versão anterior:
+- Versão atual: **0.9.2** (`cio/__init__.py`). Construa sempre com a tag da versão. Para voltar à versão anterior:
 
   ```bash
   CIO_VERSION=<tag-anterior> docker compose up -d

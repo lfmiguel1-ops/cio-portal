@@ -1,6 +1,6 @@
 # Guia da TI: instalação e operação do portal de relatórios
 
-- **Sistema:** Central de Inteligência Operacional (CIO Portal), versão 0.9.1
+- **Sistema:** Central de Inteligência Operacional (CIO Portal), versão 0.9.2
 - **Endereço:** `https://relatorios.europcar.com.br`
 - **Responsável pelo negócio:** Luis Fernando Ambrosio Miguel (administrador do portal e do Zoho)
 
@@ -16,7 +16,7 @@ eles são digitados direto no Coolify, como variável secreta.
 |---|---|
 | O que é | Portal web interno para consultar os relatórios diários que chegam por e-mail (Zoho Mail) e PDFs/imagens enviados manualmente. |
 | Quem usa | Funcionários e franqueados com e-mail `@europcar.com.br`, no computador e no celular. Login pela conta Zoho da empresa. |
-| Onde roda | Servidor da empresa, no **Coolify**, em **um container Docker** (`cio-portal:0.9.1`). |
+| Onde roda | Servidor da empresa, no **Coolify**, em **um container Docker** (`cio-portal:0.9.2`). |
 | Banco | O **PostgreSQL já existente** (versão 13 ou superior), com um banco e um usuário exclusivos. |
 | Arquivos | Dois volumes Docker: `cio-data` (originais) e `cio-backups` (backups). |
 | Custo | Nenhum. Sem licenças, sem serviços pagos, sem CDN. Certificado HTTPS gratuito (Let's Encrypt, via Coolify). |
@@ -154,10 +154,10 @@ Se a senha tiver caracteres especiais (`@ : / ? # %`), use só letras e números
 
 ## 6. Construir a imagem (no servidor)
 
-Copie `cio-portal-v0.9.1.zip` para o servidor e rode cada comando:
+Copie `cio-portal-v0.9.2.zip` para o servidor e rode cada comando:
 
 ```bash
-unzip cio-portal-v0.9.1.zip
+unzip cio-portal-v0.9.2.zip
 ```
 
 ```bash
@@ -165,16 +165,16 @@ cd cio-portal
 ```
 
 ```bash
-docker build --build-arg CIO_VERSION=0.9.1 -t cio-portal:0.9.1 .
+docker build --build-arg CIO_VERSION=0.9.2 -t cio-portal:0.9.2 .
 ```
 
 Conferir:
 
 ```bash
-docker run --rm cio-portal:0.9.1 python -m cio --version
+docker run --rm cio-portal:0.9.2 python -m cio --version
 ```
 
-Deve responder `cio-portal 0.9.1`. A imagem roda como usuário sem privilégios (uid 10001) e inclui o
+Deve responder `cio-portal 0.9.2`. A imagem roda como usuário sem privilégios (uid 10001) e inclui o
 `pg_dump`/`pg_restore` 17, compatível com servidores PostgreSQL 13 a 17.
 
 ---
@@ -339,7 +339,7 @@ O portal faz sozinho, sem nenhuma configuração extra:
    docker build --build-arg CIO_VERSION=0.9.2 -t cio-portal:0.9.2 .
    ```
 
-3. No compose do Coolify, troque `image: cio-portal:0.9.1` por `cio-portal:0.9.2` e faça Redeploy.
+3. No compose do Coolify, troque `image: cio-portal:0.9.2` por `cio-portal:0.9.2` e faça Redeploy.
 4. Rode `python -m cio diagnostico`.
 
 **Voltar de versão:** troque a tag de volta para a anterior e faça Redeploy. A imagem antiga continua no servidor:
@@ -423,7 +423,7 @@ cópia externa → seção 15.
 - [ ] IP público informado e DNS `relatorios.europcar.com.br` ativo
 - [ ] Portas 80/443 de entrada e saídas da seção 3.3 liberadas
 - [ ] Banco `cio_portal`, usuário `cio_app` e (recomendado) `cio_restore_test` criados
-- [ ] Imagem `cio-portal:0.9.1` construída e recurso criado no Coolify
+- [ ] Imagem `cio-portal:0.9.2` construída e recurso criado no Coolify
 - [ ] Variáveis preenchidas como secret; deploy com `/saude` = `ok` e HTTPS válido
 - [ ] `python -m cio diagnostico` todo `true`/`ok`
 - [ ] Primeiro login de Luis pelo "Entrar com Zoho"

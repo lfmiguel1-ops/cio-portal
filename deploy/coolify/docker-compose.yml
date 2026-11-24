@@ -1,6 +1,6 @@
 # Coolify › New Resource › Docker Compose Empty  (colar este arquivo)
 # A imagem é construída no próprio servidor (sem repositório Git):
-#   unzip cio-portal-v0.9.1.zip && cd cio-portal && docker build --build-arg CIO_VERSION=0.9.1 -t cio-portal:0.9.1 .
+#   unzip cio-portal-v0.9.2.zip && cd cio-portal && docker build --build-arg CIO_VERSION=0.9.2 -t cio-portal:0.9.2 .
 # VERSÃO: a tag abaixo deve ser igual à de cio/__init__.py (__version__). Para voltar de versão, troque a tag
 # pela anterior (a imagem anterior continua no servidor) e faça Redeploy — ver deploy/COOLIFY.md › Rollback.
 # Domínio (Coolify › serviço cio-portal › Domains): https://relatorios.europcar.com.br:8000
@@ -8,7 +8,7 @@
 # Variáveis: Coolify › Environment Variables (ver deploy/COOLIFY.md). Nada de senha neste arquivo.
 services:
   cio-portal:
-    image: cio-portal:0.9.1
+    image: cio-portal:0.9.2
     pull_policy: never
     restart: unless-stopped
     environment:

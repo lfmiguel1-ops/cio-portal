@@ -37,7 +37,7 @@ proxy (Traefik/Coolify), deixe-o em 30 MB.
 
 ## 2. Imagem do portal (no servidor)
 ```bash
-unzip cio-portal-v0.9.1.zip
+unzip cio-portal-v0.9.2.zip
 ```
 
 ```bash
@@ -45,7 +45,7 @@ cd cio-portal
 ```
 
 ```bash
-docker build --build-arg CIO_VERSION=0.9.1 -t cio-portal:0.9.1 .
+docker build --build-arg CIO_VERSION=0.9.2 -t cio-portal:0.9.2 .
 ```
 
 ## 3. Recurso no Coolify
@@ -151,7 +151,7 @@ Com o portal **parado** (Coolify › Stop):
 
 ## Rollback (voltar de versão)
 - **Parar a captura** sem parar o portal: `INGEST_ENABLED=false` e Redeploy.
-- **Voltar de versão:** cada versão é construída com a sua tag (`cio-portal:0.9.1`, a próxima `cio-portal:0.9.2`…).
+- **Voltar de versão:** cada versão é construída com a sua tag (`cio-portal:0.9.2`, a próxima `cio-portal:0.9.2`…).
   Antes de atualizar, rode **Backup + teste de restauração** no Admin. Para voltar, troque a tag no compose do
   Coolify pela versão anterior (a imagem continua no servidor; confira com `docker images cio-portal`) e Redeploy.
 - **Migrações de banco:** as migrações só acrescentam tabelas e colunas com valor padrão, então a versão anterior

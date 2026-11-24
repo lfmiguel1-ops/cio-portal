@@ -1,7 +1,7 @@
 # Central de Inteligência Operacional — imagem de produção.
 # Versão: definida em cio/__init__.py (__version__) e usada como tag: docker build -t cio-portal:<versão> .
 FROM python:3.12-slim-bookworm
-ARG CIO_VERSION=0.9.1
+ARG CIO_VERSION=0.9.2
 LABEL org.opencontainers.image.title="cio-portal" org.opencontainers.image.version="${CIO_VERSION}"
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
