@@ -673,11 +673,23 @@ def create_app(settings: Settings | None = None, zoho_factory=None, oidc_http=No
         def job():
             conn = connect(s)
             try:
-                run_once(conn, zoho_factory(), s, mode="manual")
+                res = run_once(conn, zoho_factory(), s, mode="manual")
+                if res.errors:
+                    from .alerts import send_admin_alert
+                    send_admin_alert(
+                        conn, s, "ingestao", "Falha na captura de e-mails",
+                        f"A sincronização manual registrou {res.errors} erro(s). "
+                        "Verifique Administração › erros não resolvidos.")
             except RuntimeError:
                 pass  # outra sincronização já está rodando
             except Exception:
                 log.exception("Sincronização manual falhou")
+                try:
+                    from .alerts import send_admin_alert
+                    send_admin_alert(conn, s, "ingestao", "Sincronização manual falhou",
+                                     "A sincronização manual não foi concluída. Verifique o log do container.")
+                except Exception:
+                    log.exception("Não foi possível enviar o alerta de ingestão")
             finally:
                 conn.close()
 
@@ -722,7 +734,14 @@ def create_app(settings: Settings | None = None, zoho_factory=None, oidc_http=No
                 verify_set(s, made["conjunto"], reference=conn)
             except Exception:
                 log.exception("Backup manual falhou")
-                audit(conn, "backup_falhou", details="ver log do container")
+                try:
+                    from .alerts import send_admin_alert
+                    send_admin_alert(conn, s, "backup", "Backup manual falhou",
+                                     "O backup iniciado na Administração não foi concluído. "
+                                     "Verifique o log do container.")
+                    audit(conn, "backup_falhou", details="ver log do container")
+                except Exception:
+                    log.exception("Não foi possível registrar a falha de backup")
             finally:
                 conn.close()
 

@@ -70,6 +70,14 @@ class Settings:
     pg_bin_dir: str = field(default_factory=lambda: os.environ.get("PG_BIN_DIR", ""))
     backup_to_workdrive: bool = field(default_factory=lambda: _bool("BACKUP_TO_WORKDRIVE", False))
 
+    # Alertas ao administrador (SMTP do Zoho Mail; use senha de APLICATIVO, gerada no webmail — não a do login)
+    alert_cooldown_min: int = field(default_factory=lambda: int(os.environ.get("ALERT_COOLDOWN_MIN", "60")))
+    smtp_host: str = field(default_factory=lambda: os.environ.get("CIO_SMTP_HOST", "smtp.zoho.com"))
+    smtp_port: int = field(default_factory=lambda: int(os.environ.get("CIO_SMTP_PORT", "587")))
+    smtp_user: str = field(default_factory=lambda: os.environ.get("CIO_SMTP_USER", ""))
+    smtp_password: str = field(repr=False, default_factory=lambda: os.environ.get("CIO_SMTP_PASSWORD", ""))
+    alert_from: str = field(default_factory=lambda: os.environ.get("CIO_ALERT_FROM", ""))
+
     @property
     def is_dev(self) -> bool:
         return self.env in {"dev", "test"}

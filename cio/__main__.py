@@ -123,6 +123,7 @@ def cmd_doctor(_args) -> int:
                                                and s.ingest_refresh_token)
     checks["zoho_login_configurado"] = bool(s.login_client_id and s.login_client_secret)
     checks["dmarc_exigido"] = s.require_dmarc
+    checks["alerta_configurado"] = s.admin_alert_email and bool(s.smtp_user and s.smtp_password)
     print(json.dumps(checks, ensure_ascii=False, indent=2))
     ok = (checks.get("banco") in {"postgres", "sqlite"} and checks["dados_gravavel"] and checks["backup_gravavel"]
           and checks.get("ferramentas_backup", {}).get("ok", True) is not False)
@@ -213,11 +214,22 @@ def cmd_serve(args) -> int:
     def job_ingest():
         conn = connect(s)
         try:
-            run_once(conn, api, s)
-            if consecutive_failed_runs(conn):
-                log.error("ALERTA: 3 ciclos de ingestão consecutivos com falha — verificar /admin.")
+            res = run_once(conn, api, s)
+            if res.errors or consecutive_failed_runs(conn):
+                from .alerts import send_admin_alert
+                send_admin_alert(
+                    conn, s, "ingestao", "Falha na captura de e-mails",
+                    f"A captura de relatórios registrou {res.errors} erro(s) no ciclo terminado em "
+                    f"{datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} (UTC). "
+                    "Verifique Administração › erros não resolvidos.")
         except Exception:
             log.exception("Ciclo de ingestão falhou")
+            try:
+                from .alerts import send_admin_alert
+                send_admin_alert(conn, s, "ingestao", "Ciclo de ingestão não pôde ser executado",
+                                 "O ciclo de ingestão falhou antes de concluir. Verifique o log do container.")
+            except Exception:
+                log.exception("Não foi possível enviar o alerta de ingestão")
         finally:
             conn.close()
 
@@ -227,8 +239,15 @@ def cmd_serve(args) -> int:
             run_backup(conn, s, uploader=_workdrive_uploader(s))
         except Exception:
             log.exception("ALERTA: backup diário falhou")
-            from .db import audit
-            audit(conn, "backup_falhou", details="ver log do container")
+            try:
+                from .alerts import send_admin_alert
+                send_admin_alert(conn, s, "backup", "Backup diário falhou",
+                                 "O backup das 02:00 não foi concluído. Verifique o log do container e "
+                                 "Administração › Auditoria.")
+                from .db import audit
+                audit(conn, "backup_falhou", details="ver log do container")
+            except Exception:
+                log.exception("Não foi possível registrar a falha de backup")
         finally:
             conn.close()
 
@@ -238,8 +257,14 @@ def cmd_serve(args) -> int:
             res = verify_set(s, reference=conn)
             if not res["ok"]:
                 log.error("ALERTA: teste de restauração falhou: %s", res.get("problemas"))
+                from .alerts import send_admin_alert
+                send_admin_alert(conn, s, "restauracao", "Teste de restauração falhou",
+                                 f"O teste semanal de restauração acusou problemas: {res.get('problemas')}")
         except Exception:
             log.exception("ALERTA: teste de restauração não pôde ser executado")
+            from .alerts import send_admin_alert
+            send_admin_alert(conn, s, "restauracao", "Teste de restauração não pôde ser executado",
+                             "O teste semanal de restauração não rodou. Verifique o log do container.")
         finally:
             conn.close()
 
