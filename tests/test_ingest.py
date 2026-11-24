@@ -317,3 +317,21 @@ def test_a5_mesmo_comunicado_para_duas_cidades_une_publicos(conn, fake, settings
     assert conn.execute("SELECT count(*) FROM message_aliases").fetchone()[0] == 1
     conn.execute("UPDATE ingest_state SET checkpoint_ms=0")
     assert run_once(conn, fake, settings).new == 0  # cópia unida não é reprocessada
+
+
+def test_anexo_docx_tem_texto_indexado_na_busca(conn, fake, settings):
+    """Issue #1: python-docx em requirements.txt — o texto de .docx entra no índice da busca."""
+    import io
+
+    import docx
+
+    buf = io.BytesIO()
+    documento = docx.Document()
+    documento.add_paragraph("Vistoria da frota: pneu do carro 1234 em substituicao.")
+    documento.save(buf)
+    fake.add("1", P + "Vistoria semanal", "<p>corpo</p>", att=True)
+    fake.attachments["1"] = [(MailAttachment("d", "vistoria.docx", buf.tell()), buf.getvalue())]
+    run_once(conn, fake, settings)
+    texto = conn.execute("SELECT text_plain FROM reports").fetchone()[0]
+    assert "pneu do carro 1234" in texto
+    assert conn.execute("SELECT supported FROM attachments").fetchone()[0] == 1
