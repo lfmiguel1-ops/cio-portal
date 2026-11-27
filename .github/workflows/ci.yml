@@ -32,6 +32,9 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - name: Habilitar unaccent no banco de teste
+        run: |
+          python -c "import psycopg; c = psycopg.connect('postgresql://postgres:teste@localhost:5432/cio_portal', autocommit=True); c.execute('CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public'); c.close()"
       - run: python -m pytest -q
         env:
           CIO_TEST_DATABASE_URL: postgresql://postgres:teste@localhost:5432/cio_portal
